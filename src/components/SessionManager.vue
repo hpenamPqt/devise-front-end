@@ -1,35 +1,84 @@
 <template>
   <div class="container">
     <h1 class="sm-title">Vue Session Manager</h1>
+
     <div class="sm-card">
-      <div v-if="isLoggedIn">
-        <button @click="storeSessions.logoutUser()" class="logout-button">
+      <div v-if="sessionStore.isLoggedIn">
+        <button @click="sessionStore.logoutUser" class="logout-button">
           Logout
         </button>
         <table class="table">
           <thead class="thead-dark">
             <tr class="table-headers">
-              <th scope="col">ID</th>
+              <th scope="col" style="width: 75px">ID</th>
               <th scope="col">email</th>
               <th scope="col">Token</th>
             </tr>
           </thead>
           <tbody>
             <tr class="table-rows">
-              <th class="table-row">[{{ this.getUserID }}]</th>
+              <th class="table-row">[{{ sessionStore.getUserID }}]</th>
               <th class="table-row table-row-username">
-                [{{ this.getUserEmail }}]
+                [{{ sessionStore.getUserEmail }}]
               </th>
-              <th class="table-row">[{{ this.getAuthToken }}]</th>
+              <th class="table-row">[{{ sessionStore.getAuthToken }}]</th>
             </tr>
           </tbody>
         </table>
       </div>
       <div v-else>
-        <h3>Sign Up!</h3>
-        <hr />
-        <br />
-        <h3>Login!</h3>
+        <div v-if="!login_signup">
+          <h3>Sign Up!</h3>
+          <form @submit.prevent="onSignUp" class="sign-up-form">
+            <input
+              type="email"
+              class="sign-up-form-email"
+              v-model="signUpEmail"
+              placeholder="Email"
+            />
+            <br />
+            <input
+              type="password"
+              class="sign-up-form-password"
+              v-model="signUpPassword"
+              placeholder="Password"
+            />
+            <br />
+            <input type="submit" value="Sign up" class="sign-up-form-submit" />
+            <button
+              @click.prevent="login_signup = true"
+              style="margin-left: 5px"
+            >
+              ¿Ya tienes una cuenta?
+            </button>
+          </form>
+        </div>
+        <div v-else>
+          <h3>Login!</h3>
+          <form @submit.prevent="onLogin" class="sign-up-form">
+            <input
+              type="email"
+              class="login-form-email"
+              v-model="loginEmail"
+              placeholder="Email"
+            />
+            <br />
+            <input
+              type="password"
+              class="login-form-password"
+              v-model="loginPassword"
+              placeholder="Password"
+            />
+            <br />
+            <input type="submit" value="Login" class="login-form-submit" />
+            <button
+              @click.prevent="login_signup = false"
+              style="margin-left: 5px"
+            >
+              ¿No tienes cuenta?
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -39,44 +88,47 @@
 /**
  * imports
  */
-import { useStoreSessions } from "@/stores/storeSessions";
+import { useSessionStore } from "@/stores/storeSessions";
 import { ref } from "vue";
 
 /**
  * storeSessions
  */
-const storeSessions = useStoreSessions();
+const sessionStore = useSessionStore();
 
-const signUpEmail = ref("");
-const signUpPassword = ref("");
+const signUpEmail = ref("hpenam@uaemex.mx");
+const signUpPassword = ref("123456");
 const loginEmail = ref("");
 const loginPassword = ref("");
 
+const login_signup = ref(true);
+
 const onSignUp = () => {
-  let data = {
+  let payload = {
     user: {
-      email: this.signUpEmail.value,
-      password: this.signUpPassword.value,
+      email: signUpEmail.value,
+      password: signUpPassword.value,
     },
   };
-  storeSessions.registerUser(data);
-  storeSessions.resetData();
+  sessionStore.registerUser(payload);
+  resetData();
 };
 const onLogin = () => {
   let data = {
     user: {
-      email: this.loginEmail.value,
-      password: this.loginPassword.value,
+      email: loginEmail.value,
+      password: loginPassword.value,
     },
   };
-  storeSessions.loginUser(data);
-  storeSessions.resetData();
+  sessionStore.loginUser(data);
+  resetData();
 };
+
 const resetData = () => {
-  this.signUpEmail = "";
-  this.signUpPassword = "";
-  this.loginEmail = "";
-  this.loginPassword = "";
+  signUpEmail.value = "";
+  signUpPassword.value = "";
+  loginEmail.value = "";
+  loginPassword.value = "";
 };
 </script>
 
@@ -88,11 +140,11 @@ const resetData = () => {
   font-family: "Roboto", sans-serif;
 }
 .container {
-  width: 90%;
+  width: 95%;
   margin: 0 auto;
 }
 .sm-card {
-  width: 75%;
+  width: 90%;
   padding: 20px;
   margin: 0 auto;
   height: 25em;

@@ -3,7 +3,7 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:3000/";
 
-export const useUsersStore = defineStore("session", {
+export const useSessionStore = defineStore("session", {
   state: () => ({
     auth_token: null,
     user: {
@@ -43,12 +43,12 @@ export const useUsersStore = defineStore("session", {
           });
       });
     },
-    loginuser(payload) {
+    loginUser(payload) {
       new Promise((resolve, reject) => {
         axios
           .post(`${BASE_URL}users/sign_in`, payload)
           .then((response) => {
-            //Setting userINfo
+            this.setUserInfo(response);
             resolve(response);
           })
           .catch((error) => {
@@ -57,9 +57,11 @@ export const useUsersStore = defineStore("session", {
       });
     },
     logoutUser() {
+      console.log("logoutUser()");
+      console.log(this.auth_token);
       const config = {
         headers: {
-          authorization: this.state.auth_token,
+          Authorization: this.auth_token,
         },
       };
       new Promise((resolve, reject) => {
@@ -67,6 +69,7 @@ export const useUsersStore = defineStore("session", {
           .delete(`${BASE_URL}users/sign_out`, config)
           .then(() => {
             //Reset user info
+            this.resetUserInfo();
             resolve();
           })
           .catch((error) => {
@@ -75,6 +78,7 @@ export const useUsersStore = defineStore("session", {
       });
     },
     loginUserWithToken(payload) {
+      console.log("loginUserWithToken storeSessions.js");
       const config = {
         headers: {
           Authorization: payload.auth_token,
@@ -85,6 +89,7 @@ export const useUsersStore = defineStore("session", {
           .get(`${BASE_URL}member-data`, config)
           .then((response) => {
             //setUserInfoFromToken
+            this.setUserInfoFromToken(response);
             resolve(response);
           })
           .catch((error) => {
@@ -92,24 +97,24 @@ export const useUsersStore = defineStore("session", {
           });
       });
     },
-    setUserInfo(response) {
-      this.state.user = response.data.user;
-      this.state.auth_token = response.headers.authorization;
+    setUserInfo(data) {
+      this.user = data.data.user;
+      this.auth_token = data.headers.authorization;
       axios.defaults.headers.common["Authorization"] =
-        response.headers.authorization;
-      localStorage.setItem("auth_token", response.headers.authorization);
+        data.headers.authorization;
+      localStorage.setItem("auth_token", data.headers.authorization);
     },
-    setUserInfoFromToken(response) {
-      this.state.user = response.dat.user;
-      this.state.auth_token = localStorage.getItem("auth_token");
+    setUserInfoFromToken(data) {
+      this.user = data.data.user;
+      this.auth_token = localStorage.getItem("auth_token");
     },
     resetUserInfo() {
-      this.state.user = {
+      this.user = {
         id: null,
         username: null,
         email: null,
       };
-      this.state.auth_token = null;
+      this.auth_token = null;
       localStorage.removeItem("auth_token");
       axios.defaults.headers.common["Authorization"] = null;
     },
